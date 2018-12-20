@@ -2,19 +2,6 @@
 #include <stdlib.h>
 #include <limits.h>
 
-int read_square(int** grid, int y, int x, int size)
-{
-    int sum = 0;
-    int _y, _x;
-    for (_y = y; _y < y + size; _y++) {
-        for (_x = x; _x < x + size; _x++) {
-            sum += grid[_y][_x];
-        }
-    }
-
-    return sum;
-}
-
 int main(int argc, char* argv[])
 {
     int serial_numer = 4842;
@@ -48,9 +35,12 @@ int main(int argc, char* argv[])
 
     // part 1
     if (0) {
-        for (y = 0; y < max_grid_size - 2; y++) {
-            for (x = 0; x < max_grid_size - 2; x++) {
-                power = read_square(grid, y, x, 3);
+        for (y = 1; y < max_grid_size - 1; y++) {
+            for (x = 1; x < max_grid_size - 1; x++) {
+                power =
+                      grid[y - 1][x - 1] + grid[y - 1][x] + grid[y - 1][x + 1]
+                    + grid[y    ][x - 1] + grid[y    ][x] + grid[y    ][x + 1]
+                    + grid[y + 1][x - 1] + grid[y + 1][x] + grid[y + 1][x + 1];
 
                 if (power > max_power) {
                     max_power = power;
@@ -60,17 +50,29 @@ int main(int argc, char* argv[])
             }
         }
 
-        printf("<%d,%d>\n", coord_x + 1, coord_y + 1);
+        printf("<%d,%d>\n", coord_x, coord_y);
     }
 
     // part 2
     if (1) {
         int grid_size = 0;
         int _grid_size;
-        for (_grid_size = 1; _grid_size < max_grid_size; _grid_size++) {
-            for (y = 0; y < max_grid_size - _grid_size + 1; y++) {
-                for (x = 0; x < max_grid_size - _grid_size + 1; x++) {
-                    power = read_square(grid, y, x, _grid_size);
+        int _max_grid_size;
+        int _x, _y;
+
+        for (y = 0; y < max_grid_size - 1; y++) {
+            for (x = 0; x < max_grid_size -1; x++) {
+                _max_grid_size = y > x ? max_grid_size - y : max_grid_size - x;
+                power = 0;
+
+                for (_grid_size = 0; _grid_size < _max_grid_size; _grid_size++) {
+                    for (_y = 0; _y < _grid_size; _y++) {
+                        power += grid[_y + y][x + _grid_size];
+                    }
+
+                    for (_x = 0; _x <= _grid_size; _x++) {
+                        power += grid[y + _grid_size][_x + x];
+                    }
 
                     if (power > max_power) {
                         max_power = power;
@@ -82,7 +84,7 @@ int main(int argc, char* argv[])
             }
         }
 
-        printf("<%d,%d,%d>\n", coord_x + 1, coord_y + 1, grid_size);
+        printf("<%d,%d,%d>\n", coord_x + 1, coord_y + 1, grid_size + 1);
     }
 
     free(grid);
