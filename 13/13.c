@@ -65,6 +65,7 @@ int main(int argc, char* argv[])
         y++;
     }
     fclose(input);
+    free(line);
 
     int carts_count = 0;
     for (y = 0; y < height; y++) {
@@ -144,6 +145,7 @@ int main(int argc, char* argv[])
                     }
 
                     positions[current_cart->y][current_cart->x] = -1;
+                    current_cart->moved = 1;
 
                     if (positions[ny][nx] != -1) {
                         current_cart->crashed = 1;
@@ -160,7 +162,6 @@ int main(int argc, char* argv[])
 
                     current_cart->x = nx;
                     current_cart->y = ny;
-                    current_cart->moved = 1;
 
                     positions[ny][nx] = current_cart->name;
 
@@ -216,6 +217,11 @@ int main(int argc, char* argv[])
                 printf("<%d,%d>\n", carts[i]->x, carts[i]->y);
             }
         }
+    }
+
+    for (y = 0; y < height; y++) {
+        free(positions[y]);
+        free(grid[y]);
     }
 
     free(positions);
