@@ -4,6 +4,8 @@
 
 int main(int argc, char* argv[])
 {
+    int part = 2;
+
     int serial_numer = 4842;
     int max_grid_size = 300;
     int y, x;
@@ -33,8 +35,7 @@ int main(int argc, char* argv[])
     int coord_y = 0;
     int coord_x = 0;
 
-    // part 1
-    if (0) {
+    if (part == 1) {
         for (y = 1; y < max_grid_size - 1; y++) {
             for (x = 1; x < max_grid_size - 1; x++) {
                 power =
@@ -53,8 +54,7 @@ int main(int argc, char* argv[])
         printf("<%d,%d>\n", coord_x, coord_y);
     }
 
-    // part 2
-    if (1) {
+    if (part == 2) {
         int grid_size = 0;
         int _grid_size;
         int _max_grid_size;
