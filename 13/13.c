@@ -9,14 +9,52 @@ struct cart {
     int name;
     int direction;
     int state;
-    int moved;
     int crashed;
 };
 
+int smaller(struct cart* a, struct cart* b)
+{
+    return
+        a->crashed == 0 && b->crashed == 1
+        || a->y < b->y
+        || a->y == b->y && a->x < b->x
+            ? 1 : 0;
+}
+
+// https://rosettacode.org/wiki/Sorting_algorithms/Quicksort#C
+void sort(struct cart** carts, int* order, int len)
+{
+    if (len < 2) {
+        return;
+    }
+
+    struct cart* pivot = carts[order[len / 2]];
+    int i, j;
+
+    for (i = 0, j = len - 1; ; i++, j--) {
+        while (smaller(carts[order[i]], pivot))  {
+            i++;
+        }
+
+        while (smaller(pivot, carts[order[j]])) {
+            j--;
+        }
+
+        if (i >= j) {
+            break;
+        }
+
+        int temp = order[i];
+        order[i] = order[j];
+        order[j] = temp;
+    }
+
+    sort(carts, order, i);
+    sort(carts, order + i, len - i);
+}
+
 int main(int argc, char* argv[])
 {
-    int part = 2;
-
     int width = 0;
     int height = 0;
     int i, x, y;
@@ -77,6 +115,7 @@ int main(int argc, char* argv[])
     }
 
     struct cart** carts = malloc(carts_count * sizeof(struct cart*));
+    int* order = malloc(carts_count * sizeof(int));
     i = 0;
     for (y = 0; y < height; y++) {
         for (x = 0; x < width; x++) {
@@ -95,11 +134,11 @@ int main(int argc, char* argv[])
                 }
                 n->state = 0;
                 n->name = i++;
-                n->moved = 0;
                 n->crashed = 0;
 
                 positions[y][x] = n->name;
                 carts[n->name] = n;
+                order[n->name] = n->name;
             }
         }
     }
@@ -107,115 +146,92 @@ int main(int argc, char* argv[])
     int collision = 0;
     int nx, ny;
     struct cart* current_cart;
-    int remaining_cars;
+    int remaining_carts = carts_count;
     do {
-        remaining_cars = 0;
         for (i = 0; i < carts_count; i++) {
-            carts[i]->moved = 0;
+            current_cart = carts[order[i]];
 
-            if (!carts[i]->crashed) {
-                remaining_cars++;
+            if (current_cart->crashed) {
+                continue;
             }
-        }
 
-        if (remaining_cars == 1 && part == 2) {
-            break;
-        }
+            if (current_cart->direction == 0) {
+                nx = current_cart->x;
+                ny = current_cart->y - 1;
+            } else if (current_cart->direction == 1) {
+                nx = current_cart->x + 1;
+                ny = current_cart->y;
+            } else if (current_cart->direction == 2) {
+                nx = current_cart->x;
+                ny = current_cart->y + 1;
+            } else if (current_cart->direction == 3) {
+                nx = current_cart->x - 1;
+                ny = current_cart->y;
+            }
 
-        for (y = 0; y < height; y++) {
-            for (x = 0; x < width; x++) {
-                if (positions[y][x] != -1) {
-                    current_cart = carts[positions[y][x]];
-                    if (current_cart->moved) {
-                        continue;
+            positions[current_cart->y][current_cart->x] = -1;
+            current_cart->x = nx;
+            current_cart->y = ny;
+
+            if (positions[ny][nx] != -1) {
+                current_cart->crashed = 1;
+                carts[positions[ny][nx]]->crashed = 1;
+
+                if (!collision) {
+                    printf("first collision position: <%d,%d>\n", nx, ny);
+                    collision = 1;
+                }
+
+                remaining_carts -= 2;
+                positions[ny][nx] = -1;
+                continue;
+            }
+
+            positions[ny][nx] = current_cart->name;
+
+            if (grid[ny][nx] == '/') {
+                if (current_cart->direction == 0) {
+                    current_cart->direction = 1;
+                } else if (current_cart->direction == 1) {
+                    current_cart->direction = 0;
+                } else if (current_cart->direction == 2) {
+                    current_cart->direction = 3;
+                } else {
+                    current_cart->direction = 2;
+                }
+            } else if (grid[ny][nx] == '\\') {
+                if (current_cart->direction == 0) {
+                    current_cart->direction = 3;
+                } else if (current_cart->direction == 1) {
+                    current_cart->direction = 2;
+                } else if (current_cart->direction == 2) {
+                    current_cart->direction = 1;
+                } else {
+                    current_cart->direction = 0;
+                }
+            } else if (grid[ny][nx] == '+') {
+                if (current_cart->state == 0) {
+                    current_cart->direction = current_cart->direction - 1;
+                    if (current_cart->direction == -1) {
+                        current_cart->direction = 3;
                     }
-
-                    if (current_cart->direction == 0) {
-                        nx = current_cart->x;
-                        ny = current_cart->y - 1;
-                    } else if (current_cart->direction == 1) {
-                        nx = current_cart->x + 1;
-                        ny = current_cart->y;
-                    } else if (current_cart->direction == 2) {
-                        nx = current_cart->x;
-                        ny = current_cart->y + 1;
-                    } else if (current_cart->direction == 3) {
-                        nx = current_cart->x - 1;
-                        ny = current_cart->y;
-                    }
-
-                    positions[current_cart->y][current_cart->x] = -1;
-                    current_cart->moved = 1;
-
-                    if (positions[ny][nx] != -1) {
-                        current_cart->crashed = 1;
-                        carts[positions[ny][nx]]->crashed = 1;
-
-                        if (part == 1) {
-                            collision = 1;
-                        } else {
-                            positions[ny][nx] = -1;
-                        }
-
-                        break;
-                    }
-
-                    current_cart->x = nx;
-                    current_cart->y = ny;
-
-                    positions[ny][nx] = current_cart->name;
-
-                    if (grid[ny][nx] == '/') {
-                        if (current_cart->direction == 0) {
-                            current_cart->direction = 1;
-                        } else if (current_cart->direction == 1) {
-                            current_cart->direction = 0;
-                        } else if (current_cart->direction == 2) {
-                            current_cart->direction = 3;
-                        } else {
-                            current_cart->direction = 2;
-                        }
-                    } else if (grid[ny][nx] == '\\') {
-                        if (current_cart->direction == 0) {
-                            current_cart->direction = 3;
-                        } else if (current_cart->direction == 1) {
-                            current_cart->direction = 2;
-                        } else if (current_cart->direction == 2) {
-                            current_cart->direction = 1;
-                        } else {
-                            current_cart->direction = 0;
-                        }
-                    } else if (grid[ny][nx] == '+') {
-                        if (current_cart->state == 0) {
-                            current_cart->direction = current_cart->direction - 1;
-                            if (current_cart->direction == -1) {
-                                current_cart->direction = 3;
-                            }
-                        } else if (current_cart->state == 2) {
-                            current_cart->direction = current_cart->direction + 1;
-                            if (current_cart->direction == 4) {
-                                current_cart->direction = 0;
-                            }
-                        }
-
-                        current_cart->state = (current_cart->state + 1) % 3;
+                } else if (current_cart->state == 2) {
+                    current_cart->direction = current_cart->direction + 1;
+                    if (current_cart->direction == 4) {
+                        current_cart->direction = 0;
                     }
                 }
-            }
 
-            if (collision) {
-                break;
+                current_cart->state = (current_cart->state + 1) % 3;
             }
         }
-    } while (!collision);
 
-    if (part == 1) {
-        printf("<%d,%d>\n", nx, ny);
-    } else {
-        for (i = 0; i < carts_count; i++) {
-            if (!carts[i]->crashed) {
-                printf("<%d,%d>\n", carts[i]->x, carts[i]->y);
-            }
+        sort(carts, order, carts_count);
+    } while (remaining_carts != 1);
+
+    for (i = 0; i < carts_count; i++) {
+        if (!carts[i]->crashed) {
+            printf("last cart position: <%d,%d>\n", carts[i]->x, carts[i]->y);
         }
     }
 
