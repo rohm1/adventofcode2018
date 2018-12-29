@@ -17,7 +17,7 @@ struct counts {
     int lumberyard;
 };
 
-void count_acre(struct counts* counts, char* grid, int y, int x, int width)
+void count_acre(struct counts* counts, const char* grid, int y, int x, int width)
 {
     if (x < 0 || x >= width) {
         return;
@@ -34,7 +34,7 @@ void count_acre(struct counts* counts, char* grid, int y, int x, int width)
     }
 }
 
-void count_adjacents(struct counts* counts, char* grid, int y, int x, int height, int width, int offset_prev)
+void count_adjacents(struct counts* counts, const char* grid, int y, int x, int height, int width, int offset_prev)
 {
     counts->open = 0;
     counts->trees = 0;
@@ -148,18 +148,6 @@ int main(int argc, char* argv[])
                 for (loop_size = 10; loop_size < 50; loop_size++) {
                     if (prev_results[i] == prev_results[i - loop_size] && prev_results[i - loop_size] == prev_results[i - 2 * loop_size]) {
                         loop_start = i - 2 * loop_size;
-                        for (j = loop_start; j < loop_start + loop_size; j++) {
-                            if (prev_results[j] != prev_results[j + loop_size]) {
-                                loop_start == -1;
-                            }
-                        }
-
-                        if (loop_start != -1) {
-                            break;
-                        }
-                    }
-
-                    if (loop_start != -1) {
                         break;
                     }
                 }
